@@ -1,0 +1,136 @@
+#!/bin/bash
+
+# This is free and unencumbered software released into the public domain.
+#
+# Anyone is free to copy, modify, publish, use, compile, sell, or
+# distribute this software, either in source code form or as a compiled
+# binary, for any purpose, commercial or non-commercial, and by any
+# means.
+#
+# In jurisdictions that recognize copyright laws, the author or authors
+# of this software dedicate any and all copyright interest in the
+# software to the public domain. We make this dedication for the benefit
+# of the public at large and to the detriment of our heirs and
+# successors. We intend this dedication to be an overt act of
+# relinquishment in perpetuity of all present and future rights to this
+# software under copyright law.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+# For more information, please refer to <http://unlicense.org>
+
+. and_pop
+. tf
+
+test_opt_bool_true() {
+    OPTIND=1
+    local bool
+    _ap_opt_parse \
+        "b" bool "Some bool." \
+        -- -b
+
+    tf_assert '[[ ${bool} == true ]]'
+}
+
+test_opt_bool_false() {
+    OPTIND=1
+    local bool
+    _ap_opt_parse \
+        "b" bool "Some bool." \
+        --
+
+    tf_assert '[[ ${bool} == false ]]'
+}
+
+test_opt_string_one_word() {
+    OPTIND=1
+    local str
+    _ap_opt_parse \
+        "s:" str "Some string." \
+        -- -s "string"
+
+    tf_assert '[[ ${str} == "string" ]]'
+}
+
+test_opt_string_two_words() {
+    OPTIND=1
+    local str
+    _ap_opt_parse \
+        "s:" str "Some string." \
+        -- -s "some string"
+
+    tf_assert '[[ "${str}" == "some string" ]]'
+}
+
+test_opt_string_no_word() {
+    OPTIND=1
+    local str
+    _ap_opt_parse \
+        "s:" str "Some string." \
+        -- -s ""
+
+    tf_assert '[[ "${str}" == "" ]]'
+}
+
+test_opt_string_no_nothing() {
+    OPTIND=1
+    local str
+
+    tf_assert \
+        '! _ap_opt_parse \
+        "s:" str "Some string." \
+        -- -s'
+}
+
+test_opt_string_not_set() {
+    OPTIND=1
+    local str
+
+    _ap_opt_parse \
+        "s:" str "Some string." \
+        --
+
+    tf_assert '[[ ${str-"unset"} == "unset" ]]'
+}
+
+test_opt_invalid_option() {
+    OPTIND=1
+    local bool
+
+    tf_assert \
+        '! _ap_opt_parse \
+        "b" bool "Some bool." \
+        -- -q'
+}
+
+test_opt_positional_arg() {
+    OPTIND=1
+    local bool str
+
+    _ap_opt_parse \
+        "s:" str   "Some string." \
+        "b"  bool  "Some bool." \
+        -- -s "some string" -b pos
+
+    tf_assert '[[ ${OPTIND} -eq 4 ]]'
+}
+
+test_help() {
+    OPTIND=1
+    unset AP_OPT_USAGE
+
+    tf_assert '[[ $(ap_opt_parse -- -h | grep -ce "-h") -eq 1 ]]'
+}
+
+test_help_user_defined_usage() {
+    OPTIND=1
+    AP_OPT_USAGE="<arg>"
+
+    tf_assert '[[ $(ap_opt_parse -- -h | grep -ce "<arg>") -eq 1 ]]'
+}
