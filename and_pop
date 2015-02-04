@@ -29,6 +29,34 @@ set -e
 set -u
 set -o pipefail
 
+_ap_color_id() {
+    local name=${1}
+
+    case ${name} in
+        red)
+            printf 1
+            ;;
+        green)
+            printf 2
+            ;;
+        *)
+            exit 1
+            ;;
+    esac
+}
+
+ap_highlight() {
+    local color=${1}
+    local string=${2}
+
+    printf "$(tput setb $(_ap_color_id ${color}))%s$(tput sgr0)" "${string}"
+}
+
+ap_msg() {
+    local msg=${1}
+    printf '%s\n' ${msg} | sed "s/^/$(ap_highlight green " ") /"
+}
+
 ap_err() {
     local msg=${1}
 
