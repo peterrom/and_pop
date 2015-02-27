@@ -123,7 +123,7 @@ ap_opt_parse() {
 
 _ap_opt_parse() {
     # getopts option string
-    local optstr=":"
+    local optstr=":-"
 
     # option to variable map
     declare -A var_for
@@ -166,6 +166,15 @@ _ap_opt_parse() {
             '?')
                 ap_err "Invalid option \"${OPTARG}\"!"
                 return 1
+                ;;
+            '-')
+                local p="${@:${OPTIND}}"
+                if [[ -n "${p##--}" ]]; then
+                    ap_err "Invalid option \"${p}\"!"
+                    return 1
+                fi
+
+                break
                 ;;
         esac
 

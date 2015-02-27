@@ -134,3 +134,26 @@ test_help_user_defined_usage() {
 
     tf_assert '[[ $(ap_opt_parse -- -h | grep -ce "<arg>") -eq 1 ]]'
 }
+
+test_double_dash() {
+    OPTND=1
+    unset AP_OPT_USAGE
+
+    local bool
+    _ap_opt_parse \
+        "b" bool "Some bool." \
+        -- -- -b
+
+    tf_assert '! ${bool}'
+    tf_assert '[[ ${OPTIND} -eq 2 ]]'
+}
+
+test_long_option() {
+    OPTIND=1
+    local bool
+
+    tf_assert \
+        '! _ap_opt_parse \
+        "b" bool "Some bool." \
+        -- -b --boo'
+}
